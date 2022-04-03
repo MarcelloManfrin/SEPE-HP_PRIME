@@ -3,6 +3,8 @@ Marcello Manfrin 01/04/2022
 
 Raccolta di codici per la risoluzione di esercizi di Sistemi Elettrici Per l'Energia per calcolatrice grafica programmabile HP PRIME.
 
+Scarica "HP Prime Connectivity Kit" per caricare sulla calcolatrice i programmi.
+
 Ogni programma adotta la filosofia "domanda-risposta" dove il software, una volta fatto girare, chiede volta per volta i valori in input necessari (quindi ogni programma non necessita di argomenti in input).
 È stata adottata questa scelta di design perchè permette, secondo mia opinione personale, un'interfaccia più user-friendly e plug-n-play verso chi si trova alle prime armi con il calcolatore grafico.
 
