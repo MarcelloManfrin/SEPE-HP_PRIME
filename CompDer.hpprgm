@@ -1,0 +1,88 @@
+// Marcello Manfrin 01/04/2022
+
+// Il programma calcola e stampa i valori della matrice di trasmissione totale,
+// tensione subtransitoria e corrente a vuoto di una linea a cui viene compensata
+// della potenza reattiva a monte e a valle di essa.
+
+// ATTENZIONE: prima di eseguire questo codice deve esser fatto girare
+// almeno una volta il programma "ReteTotale" in quanto viene qui richiamata
+// la matrice di trasmissione della rete che viene conservata
+// nello slot di memoria M0.
+
+// ATTENZIONE: il programma prevede esclusivamente il caso di
+// compensazione uguale in partenza ed in arrivo, senza compensazioni intermedie.
+
+// ATTENZIONE: viene conservata la matrice di trasmissione totale compensata
+// nello slot di memoria M0, sovrascrivendo la precedente.
+
+EXPORT CompDer()
+BEGIN
+
+LOCAL Qcd,Up0,Xsub;			// input
+
+LOCAL Y,Scd;
+LOCAL Mcd;
+LOCAL Usub,Usubm;
+LOCAL I_NL;
+
+INPUT(Qcd,"Input CompDerivata","Qcd [Mvar]","Potenza reattiva compensata");
+INPUT(Up0,"Input CompDerivata","Up0 [kV]","Tensione stellata alla partenza");
+INPUT(Xsub,"Input CompDerivata","Xsub [Ω]","Reattanza subtransitoria");
+
+
+PRINT("");
+PRINT("========COMPENSAZIONE DERIVATA========");
+PRINT("");
+
+Scd:=i*Qcd*10^(6);
+Up0:=Up0*10^3;
+
+Y:=CONJ(Scd)/(3*Up0^2);
+PRINT("Ammettenza derivata");
+PRINT("Y=Scd°/3*Up0^2 = "+Y +" [S]");
+PRINT("");
+
+Mcd:=[[1,0],[Y,1]];
+PRINT("Matrice di trasmissione della compensazione derivata");
+PRINT("Acd = "+Mcd(1,1) +" [/]");
+PRINT("Bcd = "+Mcd(1,2) +" [Ω]");
+PRINT("Ccd = "+Mcd(2,1) +" [S]");
+PRINT("Dcd = "+Mcd(2,2) +" [/]");
+PRINT("");
+
+M0:=Mcd*M0*Mcd;
+PRINT("Matrice di trasmissione totale");
+PRINT("A_tot = "+M0(1,1) +" [/]");
+PRINT("B_tot = "+M0(1,2) +" [Ω]");
+PRINT("C_tot = "+M0(2,1) +" [S]");
+PRINT("D_tot = "+M0(2,2) +" [/]");
+PRINT("");
+
+Usub:=Up0/(M0(1,1)+(i*Xsub*M0(2,1)));
+Usubm:=ABS(Usub);
+PRINT("Tensione subtransitoria");
+PRINT("Usub = Up0/(Atot+jX*Ctot) = " +Usub/10^3 +" [kV]");
+PRINT("|Usub|= "+Usubm/10^3 +" [kV]");
+PRINT("");
+if Usubm/10^3<242.5 then
+	PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
+else
+	PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
+end;
+PRINT("");
+
+I_NL:=Up0/(M0(1,1)/M0(2,1));
+PRINT("Corrente a vuoto");
+PRINT("I_NL = "+I_NL +" [A]");
+PRINT("|I_NL| =  "+ABS(I_NL) +" [A]");
+PRINT("");
+if IM(I_NL)<400 then
+	PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
+else
+	PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
+end;
+PRINT("");
+
+PRINT("Valore di M0 aggiornato!");
+
+END;

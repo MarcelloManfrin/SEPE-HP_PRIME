@@ -1,0 +1,174 @@
+// Marcello Manfrin 01/04/2022
+
+// Il programma calcola la Matrice di Trasmissione totale
+// di una rete a un numero arbitrario di tratte
+// e tutti i parametri tratta per tratta.
+
+// Nel ciclo, per ogni tratta, vengono calcolati e stampati i parametri della linea;
+// i parametri base, atti esclusivamente al calcolo degli elementi della matrice,
+// vengono sovrascitti ad ogni iterazione.
+
+// La Matrice di Trasmissione Totale parte pari alla matrice identica
+// e viene aggiornata ad ogni tratta come cascata tra
+// il blocco precedente e la tratta successiva.
+// Una questione analoga vale per la capacita longitudinale totale.
+
+// La cascata risultante non viene stampata se la rete è composta da un unica tratta.
+
+// ATTENZIONE: viene conservata la matrice di trasmissione totale compensata
+// nello slot di memoria M0, sovrascrivendo la precedente.
+
+EXPORT ReteTotale()
+BEGIN
+
+LOCAL n,f,Un;
+LOCAL r,l,g,c,d,terne;
+LOCAL M_tot,c_tot;
+
+LOCAL j;					// contatore cicli
+
+LOCAL z,y,Z,Y;
+LOCAL k,k1,Zc,Zc_mod, Zc_arg;
+LOCAL S_nat,S_nat_mod,S_nat_arg;
+LOCAL A,B,C,D;
+LOCAL λ_id,v_id; 
+LOCAL Zpi,Ypi;            	// schema pigreco equivalente
+LOCAL Zpin,Ypin;            // schema pigreco nominale
+
+M_tot:=[[1,0],[0,1]];
+c_tot:=0;
+j:=1;
+
+INPUT(n,"Input ReteTotale","n [/]","Numero di tratte");
+INPUT(f,"Input ReteTotale","f [Hz]","Frequenza di rete");
+INPUT(Un,"Input ReteTotale","Un [Kv]","Tensione di rete");
+Un:=Un*10^3;
+
+PRINT("");
+PRINT("==============RETE TOTALE==============");
+PRINT("");
+
+for j from 1 to n step 1 do					// un ciclo per tratta
+	
+	if n>1 then
+		PRINT("-- Tratta " +j +" --");
+		PRINT("");
+	end;
+	
+	if n>1 then
+		INPUT(r,"Input ReteTotale","r [mΩ/km]","Resistenza Longitudinale Chilometrica tratta " +j);
+		INPUT(l,"Input ReteTotale","l [mH/km]","Induttanza Longitudinale Chilometrica tratta " +j);
+		INPUT(g,"Input ReteTotale","g [nS/km]","Conduttanza Longitudinale Chilometrica tratta " +j);
+		INPUT(c,"Input ReteTotale","c [nF/km]","Capacità Longitudinale Chilometrica tratta " +j);
+		INPUT(d,"Input ReteTotale","d [km]","Lunghezza tratta " +j);
+		INPUT(terne,"Input ReteTotale","terne [/]","Numero di terne della tratta " +j);
+	else
+		INPUT(r,"Input ReteTotale","r [mΩ/km]","Resistenza Longitudinale Chilometrica");
+		INPUT(l,"Input ReteTotale","l [mH/km]","Induttanza Longitudinale Chilometrica");
+		INPUT(g,"Input ReteTotale","g [nS/km]","Conduttanza Longitudinale Chilometrica");
+		INPUT(c,"Input ReteTotale","c [nF/km]","Capacità Longitudinale Chilometrica");
+		INPUT(d,"Input ReteTotale","d [km]","Lunghezza linea");
+		INPUT(terne,"Input ReteTotale","terne [/]","Numero di terne della linea");
+	end;
+	
+	r:=r/10^3;        //Riportato a mΩ/km
+	l:=l/10^3;        //Riportato a mH/km  
+	g:=g/10^9;        //Riportato a nS/km
+	c:=c/10^9;        //Riportato a nF/km
+	
+	z:=(r+i*2*pi*f*l)/terne;
+	y:=(g+i*2*pi*f*c)*terne;
+	PRINT("Impedenza chilometrica [Ω/km]");
+	PRINT("z= r+jX_l = " +z);
+	PRINT("Ammettenza chilometrica [S/km]");
+	PRINT("y= g+jX_c = " +y);
+	PRINT("");
+	
+	Z:=z*d;
+	Y:=y*d;
+	PRINT("Impedenza di linea [Ω]");
+	PRINT("Z = z*d = " +Z);
+	PRINT("Ammettenza di linea [S]");
+	PRINT("Y = y*d = " +Y);
+	PRINT("");
+	
+	Zc:=sqrt(z/y);
+	Zc_mod:=ABS(Zc);
+	Zc_arg:=ARG(Zc);
+	PRINT("Impedenza Caratteristica [Ω]");
+	PRINT("Zc = √z/y =  " +Zc );
+	PRINT("|Zc| = " +Zc_mod );
+	PRINT("arg(Zc) = " +Zc_arg);
+	PRINT("");
+	
+	k:=sqrt(z*y);
+	k1:=r/(2*Zc_mod);
+	PRINT("Costante di Propagazione [1/km]");
+	PRINT("k = √z*y = " +k );
+	PRINT("k' ~= r/(2*|Zc|) = " +k1 );
+	PRINT("");
+	
+	S_nat:=((Un^2)/CONJ(Zc))/10^6;
+	S_nat_mod:=ABS(S_nat);
+	S_nat_arg:=ARG(S_nat);
+	PRINT("Potenza Complessa Naturale");
+	PRINT("S_nat = (Un^2)/conj(Zc) = " +S_nat +" [MW+jMVAR]");
+	PRINT("|S_nat| = " +S_nat_mod +" [MVA]");
+	PRINT("arg(S_nat) = " +S_nat_arg);
+	PRINT("");
+	
+	A:=cosh(k*d);
+	B:=Zc*sinh(k*d);
+	C:=(sinh(k*d))/Zc;
+	M0:=[[A,B],[C,A]];
+	PRINT("Elementi Matrice di Trasmissione");
+	PRINT("A = cosh(k*d) = " +A +" [/]");
+	PRINT("B = sinh(k*d)*Zc = " +B +" [Ω]");
+	PRINT("C = sinh(k*d)/Zc = " +C +" [S]");
+	PRINT("D = cosh(k*d) = " +A +" [/]");
+	PRINT("");
+	
+	v_id:=1/sqrt(l*c);
+	λ_id:=v_id/f;
+	PRINT("v_id  = 1/√l*c = " +v_id +" [km/s]");
+	PRINT("λ_id  = v_id/f = " +λ_id +" [km]");
+	PRINT("");
+	
+	Zpi:=B;
+	Ypi:=(A-1)/B;
+	PRINT("Schema pigreco equivalente");
+	PRINT("Z3 = B = " +Zpi +" [Ω]");
+	PRINT("Y1 = Y2 = (A-1)/B = " +Ypi +" [S]");
+	PRINT("");
+
+	Zpin:=Z;
+	Ypin:=Y/2;
+	PRINT("Schema pigreco nominale");
+	PRINT("Z3 = Z = " +Zpin +" [Ω]");
+	PRINT("Y1 = Y2 = Y/2 = " +Ypin +" [S]");
+	PRINT("");
+	
+	
+	M_tot:=M_tot*M0;
+	c_tot:=c_tot+(terne*d*c);
+
+end;
+
+M0:=M_tot;			// salvo la matrice di trasmissione totale nello slot M0
+
+if n>1 then
+	PRINT("-- ReteTotale Totale --");
+	PRINT("Elementi Matrice di Trasmissione");
+	PRINT("A_tot = " +M0(1,1) +" [/]");
+	PRINT("B_tot = " +M0(1,2) +" [Ω]");
+	PRINT("C_tot = " +M0(2,1) +" [S]");
+	PRINT("D_tot = " +M0(2,2) +" [/]");
+	PRINT("");
+	PRINT("Capacità chilometrica longitudinale totale");
+	PRINT("c_tot = " +c_tot +" [nF/km]");
+	PRINT("");
+end;
+
+PRINT("Valore di M0 aggiornato!");
+
+END;
