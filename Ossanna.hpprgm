@@ -31,9 +31,8 @@ LOCAL Ia,Ip;
 LOCAL ∆S,∆U,∆P,∆Q,∆p,∆q;
 LOCAL OSS;
 
-INPUT(Pa,"Input Ossanna","Pa [MW]","Potenza attiva trifase allo arrivo");
-INPUT(Qa,"Input Ossanna","Qa [Mvar]","Potenza reattiva trifase allo arrivo");
-INPUT(Up0,"Input Ossanna","Up0 [kV]","Tensione stellata alla partenza");
+INPUT({Pa,Qa,Up0},"Input Ossanna",{"Pa [MW]","Qa [Mvar]","Up0 [kV]"},
+{"Potenza attiva trifase allo arrivo","Potenza reattiva trifase allo arrivo","Tensione stellata alla partenza"});
 A:=M0(1,1);
 B:=M0(1,2);
 D:=M0(2,2);
@@ -121,7 +120,7 @@ PRINT("∆p = " +∆p +" %");
 PRINT("∆q = " +∆q +" %");
 PRINT("");
 
-Ia:=Sa/(3*CONJ(Ua));
+Ia:=CONJ(Sa)/(3*CONJ(Ua));
 Ip:=CONJ(Sp_mono/Up0);
 PRINT("Correnti [kA]");
 PRINT("Ip = (Sp_mono/Up)° = "+Ip);

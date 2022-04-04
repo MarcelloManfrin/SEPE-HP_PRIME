@@ -18,8 +18,8 @@ LOCAL Xsub;
 LOCAL Usub,Usubm;
 LOCAL I_NL;
 
-INPUT(Up0,"Input Energizzazione","Up0 [kV]","Tensione stellata alla partenza");
-INPUT(Icc,"Input Energizzazione","Icc [kA]","Corrente di cortocircuito trifase");
+INPUT({Up0,Icc},"Input Energizzazione",{"Up0 [kV]","Icc [kA]"},
+{"Tensione stellata alla partenza","Corrente di cortocircuito trifase"});
 
 A:=M0(1,1);
 C:=M0(2,1);

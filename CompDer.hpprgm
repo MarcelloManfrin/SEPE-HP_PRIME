@@ -25,9 +25,8 @@ LOCAL Mcd;
 LOCAL Usub,Usubm;
 LOCAL I_NL;
 
-INPUT(Qcd,"Input CompDerivata","Qcd [Mvar]","Potenza reattiva compensata");
-INPUT(Up0,"Input CompDerivata","Up0 [kV]","Tensione stellata alla partenza");
-INPUT(Xsub,"Input CompDerivata","Xsub [Ω]","Reattanza subtransitoria");
+INPUT({Qcd,Up0,Xsub},"Input CompDerivata",{"Qcd [Mvar]","Up0 [kV]","Xsub [Ω]"},
+{"Potenza reattiva compensata","Tensione stellata alla partenza","Reattanza subtransitoria"});
 
 
 PRINT("");

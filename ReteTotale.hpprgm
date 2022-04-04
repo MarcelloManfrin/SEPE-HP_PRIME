@@ -39,9 +39,8 @@ M_tot:=[[1,0],[0,1]];
 c_tot:=0;
 j:=1;
 
-INPUT(n,"Input ReteTotale","n [/]","Numero di tratte");
-INPUT(f,"Input ReteTotale","f [Hz]","Frequenza di rete");
-INPUT(Un,"Input ReteTotale","Un [Kv]","Tensione di rete");
+INPUT({n,f,Un},"Input ReteTotale",{"n [/]","f [Hz]","Un [Kv]"},
+{"Numero di tratte","Frequenza di rete","Tensione di rete"});
 Un:=Un*10^3;
 
 PRINT("");
@@ -56,19 +55,15 @@ for j from 1 to n step 1 do					// un ciclo per tratta
 	end;
 	
 	if n>1 then
-		INPUT(r,"Input ReteTotale","r [mΩ/km]","Resistenza Longitudinale Chilometrica tratta " +j);
-		INPUT(l,"Input ReteTotale","l [mH/km]","Induttanza Longitudinale Chilometrica tratta " +j);
-		INPUT(g,"Input ReteTotale","g [nS/km]","Conduttanza Longitudinale Chilometrica tratta " +j);
-		INPUT(c,"Input ReteTotale","c [nF/km]","Capacità Longitudinale Chilometrica tratta " +j);
-		INPUT(d,"Input ReteTotale","d [km]","Lunghezza tratta " +j);
-		INPUT(terne,"Input ReteTotale","terne [/]","Numero di terne della tratta " +j);
+		INPUT({r,l,g,c,d,terne},"Input ReteTotale, tratta " +j,{"r [mΩ/km]","l [mH/km]","g [nS/km]","c [nF/km]","d [km]",
+		"terne [/]"},{"Resistenza Longitudinale Chilometrica della tratta","Induttanza Longitudinale Chilometrica della tratta",
+		"Conduttanza Longitudinale Chilometrica della tratta","Capacità Longitudinale Chilometrica della tratta",
+		"Lunghezza della tratta","Numero di terne della tratta"});
 	else
-		INPUT(r,"Input ReteTotale","r [mΩ/km]","Resistenza Longitudinale Chilometrica");
-		INPUT(l,"Input ReteTotale","l [mH/km]","Induttanza Longitudinale Chilometrica");
-		INPUT(g,"Input ReteTotale","g [nS/km]","Conduttanza Longitudinale Chilometrica");
-		INPUT(c,"Input ReteTotale","c [nF/km]","Capacità Longitudinale Chilometrica");
-		INPUT(d,"Input ReteTotale","d [km]","Lunghezza linea");
-		INPUT(terne,"Input ReteTotale","terne [/]","Numero di terne della linea");
+		INPUT({r,l,g,c,d,terne},"Input ReteTotale",{"r [mΩ/km]","l [mH/km]","g [nS/km]","c [nF/km]","d [km]",
+		"terne [/]"},{"Resistenza Longitudinale Chilometrica","Induttanza Longitudinale Chilometrica",
+		"Conduttanza Longitudinale Chilometrica","Capacità Longitudinale Chilometrica",
+		"Lunghezza della linea","Numero di terne della linea"});
 	end;
 	
 	r:=r/10^3;        //Riportato a mΩ/km
