@@ -51,7 +51,7 @@ PRINT("Corrente a vuoto");
 PRINT("I_NL = "+I_NL*10^3 +" [A]");
 PRINT("|I_NL| =  "+ABS(I_NL)*10^3 +" [A]");
 PRINT("");
-if IM(I_NL)*10^3<400 then
+if ABS(I_NL)*10^3<400 then
 	PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
 else
 	PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");

@@ -120,7 +120,7 @@ PRINT("∆p = " +∆p +" %");
 PRINT("∆q = " +∆q +" %");
 PRINT("");
 
-Ia:=CONJ(Sa)/(3*CONJ(Ua));
+Ia:=CONJ(Sa/(3*Ua));
 Ip:=CONJ(Sp_mono/Up0);
 PRINT("Correnti [kA]");
 PRINT("Ip = (Sp_mono/Up)° = "+Ip);
