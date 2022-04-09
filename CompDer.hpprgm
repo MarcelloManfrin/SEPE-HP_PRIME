@@ -18,15 +18,15 @@
 EXPORT CompDer()
 BEGIN
 
-LOCAL Qcd,Up0,Xsub;			// input
+LOCAL Qcd,Up0,Icc;			// input
 
 LOCAL Y,Scd;
 LOCAL Mcd;
-LOCAL Usub,Usubm;
-LOCAL I_NL;
+LOCAL Xsub,Usub;
+LOCAL I_NL,I_NLie;
 
-INPUT({Qcd,Up0,Xsub},"Input CompDerivata",{"Qcd [Mvar]","Up0 [kV]","Xsub [Ω]"},
-{"Potenza reattiva compensata","Tensione stellata alla partenza","Reattanza subtransitoria"});
+INPUT({Qcd,Up0,Icc},"Input CompDerivata",{"Qcd [Mvar]","Up0 [kV]","Icc [kA]"},
+{"Potenza reattiva compensata","Tensione stellata alla partenza","Corrente di cortocircuito trifase subtransitoria"});
 
 
 PRINT("");
@@ -35,6 +35,7 @@ PRINT("");
 
 Scd:=i*Qcd*10^(6);
 Up0:=Up0*10^3;
+Icc:=Icc*10^3;
 
 Y:=CONJ(Scd)/(3*Up0^2);
 PRINT("Ammettenza derivata");
@@ -43,10 +44,10 @@ PRINT("");
 
 Mcd:=[[1,0],[Y,1]];
 PRINT("Matrice di trasmissione della compensazione derivata");
-PRINT("Acd = "+Mcd(1,1) +" [/]");
-PRINT("Bcd = "+Mcd(1,2) +" [Ω]");
-PRINT("Ccd = "+Mcd(2,1) +" [S]");
-PRINT("Dcd = "+Mcd(2,2) +" [/]");
+PRINT("A_cd = "+Mcd(1,1) +" [/]");
+PRINT("B_cd = "+Mcd(1,2) +" [Ω]");
+PRINT("C_cd = "+Mcd(2,1) +" [S]");
+PRINT("D_cd = "+Mcd(2,2) +" [/]");
 PRINT("");
 
 M0:=Mcd*M0*Mcd;
@@ -57,28 +58,28 @@ PRINT("C_tot = "+M0(2,1) +" [S]");
 PRINT("D_tot = "+M0(2,2) +" [/]");
 PRINT("");
 
+Xsub:=Up0/Icc;
 Usub:=Up0/(M0(1,1)+(i*Xsub*M0(2,1)));
-Usubm:=ABS(Usub);
+PRINT("Reattanza subtransitoria");
+PRINT("Xsub = Up0/Icc = " +Xsub +" [Ω]");
 PRINT("Tensione subtransitoria");
-PRINT("Usub = Up0/(Atot+jX*Ctot) = " +Usub/10^3 +" [kV]");
-PRINT("|Usub|= "+Usubm/10^3 +" [kV]");
+PRINT("Usub = Up0/(A_tot+jXsub*C_tot) = " +Usub/10^3 +" [kV]");
+PRINT("|Usub|= "+ABS(Usub/10^3) +" [kV]");
 PRINT("");
-if Usubm/10^3<242.5 then
-	PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
-else
-	PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
+if ABS(Usub)<242500
+	then PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
+	else PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
 end;
 PRINT("");
 
 I_NL:=Up0/(M0(1,1)/M0(2,1));
 PRINT("Corrente a vuoto");
-PRINT("I_NL = "+I_NL +" [A]");
+PRINT("I_NL = Up0/(A_tot/C_tot) "+I_NL +" [A]");
 PRINT("|I_NL| =  "+ABS(I_NL) +" [A]");
 PRINT("");
-if ABS(I_NL)<400 then
-	PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
-else
-	PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
+if ABS(I_NL)*10^3<400
+	then PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
+	else PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
 end;
 PRINT("");
 

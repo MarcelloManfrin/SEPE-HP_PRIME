@@ -33,6 +33,7 @@ LOCAL OSS;
 
 INPUT({Pa,Qa,Up0},"Input Ossanna",{"Pa [MW]","Qa [Mvar]","Up0 [kV]"},
 {"Potenza attiva trifase allo arrivo","Potenza reattiva trifase allo arrivo","Tensione stellata alla partenza"});
+
 A:=M0(1,1);
 B:=M0(1,2);
 D:=M0(2,2);
@@ -42,7 +43,7 @@ PRINT("");
 PRINT("===============OSSANNA===============");
 PRINT("");
 
-S0r:=Sa/3;
+S0r:=Sa/3;		// riporto a monofase equivalente
 PRINT("S_0r = Sa/3 = " +S0r +" [MW+jMVAR]");
 U0ANL:=Up0/A;
 PRINT("U_0ANL = Up0/A = "+U0ANL +" [kV]");
@@ -80,8 +81,7 @@ b:=cos(ψ-Φ);
 c:=sin(ψ-Φ);
 d:=0.25-a*b-(a*c)^2;
 
-
-if d>0 then
+if d>0 then				// controllo realizzabilità fisica
 	ξ:=sqrt(d);
 	PRINT("ξ reale, linea realizzabile fisicamente");
 else
@@ -89,7 +89,7 @@ else
 	PRINT("ξ immaginario, linea non realizzabile fisicamente");
 end;
  
-PRINT("ξ = √1/4-|Sa_pu|*cos(ψ-Φ)-[|Sa_pu|*sen(ψ-Φ)]^2 = "+ξ);
+PRINT("ξ = √{1/4-|Sa_pu|*cos(ψ-Φ)-[|Sa_pu|*sen(ψ-Φ)]^2} = "+ξ);
 PRINT("");
 
 
@@ -115,11 +115,13 @@ PRINT("Sp_pu = [A*D°-Ua_pu°*e^(j2α)]*e^jψ = " +Sp_pu);
 PRINT("Sp_mono = Sa_pu*Sb = "+Sp_mono);
 PRINT("∆S = 3*Sp_mono-Sa = "+∆S);
 
-if Pa=0 
+// se non a vuoto calcola perdite
+if Pa=0
 	then PRINT("Pa=0, ∆p non calcolato ");
 	else ∆p:=(∆P/Pa)*100; PRINT("∆p = " +∆p +" %");
 end;
-if Qa=0 
+// se non a vuoto calcola reativa impegnata
+if Qa=0
 	then PRINT("Qa=0, ∆q non calcolato ");
 	else ∆q:=ABS(∆Q/Qa)*100; PRINT("∆q = " +∆q +" %");
 end;

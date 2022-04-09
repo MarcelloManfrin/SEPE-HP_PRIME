@@ -7,6 +7,10 @@
 // la matrice di trasmissione della rete che viene conservata
 // nello slot di memoria M0.
 
+// ATTENZIONE: il programma non calcola e stampa la corrente a vuoto
+// nel caso in cui L0 è nullo
+// L0 è definito nullo in caso di linea a tratta multipla.
+
 
 EXPORT Energizzazione()
 BEGIN
@@ -16,10 +20,10 @@ LOCAL Up0,Icc;			// input
 LOCAL A,C;
 LOCAL Xsub;
 LOCAL Usub,Usubm;
-LOCAL I_NL;
+LOCAL I_NL,I_NLie;
 
 INPUT({Up0,Icc},"Input Energizzazione",{"Up0 [kV]","Icc [kA]"},
-{"Tensione stellata alla partenza","Corrente di cortocircuito trifase"});
+{"Tensione stellata alla partenza","Corrente di cortocircuito trifase subtransitoria"});
 
 A:=M0(1,1);
 C:=M0(2,1);
@@ -39,10 +43,9 @@ PRINT("Tensione subtransitoria");
 PRINT("Usub = Up0/(A+jX*C) = " +Usub +" [kV]");
 PRINT("|Usub|= "+Usubm);
 PRINT("");
-if Usubm<242.5 then
-	PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
-else
-	PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
+if Usubm<242.5
+	then PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
+	else PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
 end;
 PRINT("");
 
@@ -51,16 +54,25 @@ PRINT("Corrente a vuoto");
 PRINT("I_NL = "+I_NL*10^3 +" [A]");
 PRINT("|I_NL| =  "+ABS(I_NL)*10^3 +" [A]");
 PRINT("");
-if ABS(I_NL)*10^3<400 then
-	PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
-else
-	PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
+if ABS(I_NL)<0.4
+	then PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
+	else PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
 end;
 PRINT("");
 
-PRINT("Se la linea fosse stata a costanti concentrate:");
-PRINT("I_NL = 2pi*f*l*c*Up0");
-PRINT("");
+I_NLie:= 2*pi*L0(5)*L0(4)*L0(6)*(Up0*10^3);
+if I_NLie=0 
+	then 
+		PRINT("Se la linea fosse stata a costanti concentrate:");
+		PRINT("I_NL = 2πf*c*d*Up0");
+		PRINT("L0 nullo, linea a tratta multipla");
+	else
+		PRINT("Se la linea fosse stata a costanti concentrate:");
+		PRINT("I_NL = 2πf*c*d*Up0 = " +I_NLie +" [A]");
+		PRINT("|I_NL| =  "+ABS(I_NLie) +" [A]");
+		PRINT("");
+end;
+
 PRINT("OK");
 
 
