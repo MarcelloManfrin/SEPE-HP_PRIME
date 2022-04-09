@@ -3,7 +3,9 @@ Marcello Manfrin 01/04/2022
 
 Raccolta di codici per la risoluzione di esercizi di Sistemi Elettrici Per l'Energia per calcolatrice grafica programmabile HP PRIME.
 
-Scarica "HP Prime Connectivity Kit" per caricare sulla calcolatrice i programmi da: https://www.hpcalc.org/details/8938
+Scarica "HP Prime Connectivity Kit" per caricare sulla calcolatrice i programmi da: https://www.hpcalc.org/details/8938.
+
+Per usare i programmi, una volta trasferiti sulla calcolatrice, premere il tasto toolbox (quello con l'immagine della cassetta degli attrezzi), selezionare il programma e premere enter senza inserire alcun argomento tra parentesi.
 
 Ogni programma adotta la filosofia "domanda-risposta" dove il software, una volta fatto girare, chiede volta per volta i valori in input necessari (quindi ogni programma non necessita di argomenti in input).
 È stata adottata questa scelta di design perchè permette, secondo mia opinione personale, un'interfaccia più user-friendly e plug-n-play verso chi si trova alle prime armi con il calcolatore grafico.
@@ -14,7 +16,7 @@ Questa raccolta contiene:
 1) ReteTotale:
 calcola e stampa tutti i parametri di una rete a costanti distribuite ad un numero arbitrario di tratte e terne per tratta compresa la matrice di trasmissione totale (calcolata come cascata delle singole) che viene salvata nello slot di memoria M0 per essere richiamata dai programmi successivi;
 
-2) Energiggazione:
+2) Energizzazione:
 calcola e stampa la tensione subtransitoria e la corrente a vuoto di una ipotetica energiggazione della linea la cui matrice di trasmissione è salvata nello slot M0;
 
 3) Ossanna:
