@@ -29,7 +29,7 @@ BEGIN
 LOCAL n,f,Un;				// input
 
 LOCAL r,l,g,c,d,terne;
-LOCAL M_tot,c_tot;
+LOCAL M_tot,c_tot,d_tot;
 
 LOCAL j;					// contatore cicli
 
@@ -37,12 +37,13 @@ LOCAL z,y,Z,Y;
 LOCAL k,k1,Zc,Zc_mod, Zc_arg;
 LOCAL S_nat,S_nat_mod,S_nat_arg;
 LOCAL A,B,C,D;
-LOCAL λ_id,v_id; 
+LOCAL λ,v; 
 LOCAL Zpi,Ypi;            	// schema pigreco equivalente
 LOCAL Zpin,Ypin;            // schema pigreco nominale
 
 M_tot:=[[1,0],[0,1]];
 c_tot:=0;
+d_tot:=0;
 j:=1;
 
 INPUT({n,f,Un},"Input ReteTotale",{"n [/]","f [Hz]","Un [Kv]"},
@@ -77,7 +78,7 @@ for j from 1 to n step 1 do					// un ciclo per tratta
 	g:=g/10^9;        // riportato a nS/km
 	c:=c/10^9;        // riportato a nF/km
 	
-	L0:=[r,l,g,c,f,d];		// costruisco L0
+	L0:=[r,l,g,c,f,d,n,terne];		// costruisco L0
 	
 	z:=(r+i*2*pi*f*l)/terne;
 	y:=(g+i*2*pi*f*c)*terne;
@@ -131,10 +132,16 @@ for j from 1 to n step 1 do					// un ciclo per tratta
 	PRINT("D = cosh(k*d) = " +A +" [/]");
 	PRINT("");
 	
-	v_id:=1/sqrt(l*c);
-	λ_id:=v_id/f;
-	PRINT("v_id  = 1/√l*c = " +v_id +" [km/s]");
-	PRINT("λ_id  = v_id/f = " +λ_id +" [km]");
+	PRINT("Se linea ideale: ");
+	λ:=1/(f*sqrt((l-0.05*10^(-3))*c));
+	v:=λ*f;
+	PRINT("λ = 1/f*√l_id*c = " +λ +" [km]");
+	PRINT("v = v*f = " +v +" [km/s]");
+	PRINT("Linea reale: ");
+	λ:=2*pi/IM(k);
+	v:=λ*f;
+	PRINT("λ = 2*pi/IM(k) = " +λ +" [km]");
+	PRINT("v = λ*f = " +v +" [km/s]");
 	PRINT("");
 	
 	Zpi:=B;
@@ -154,6 +161,7 @@ for j from 1 to n step 1 do					// un ciclo per tratta
 	
 	M_tot:=M_tot*M0;
 	c_tot:=c_tot+(terne*d*c);
+	d_tot:=d_tot+d;
 
 end;
 
@@ -169,7 +177,7 @@ if n>1 then			// se tratta multipla calcola e stampa matrice totale
 	PRINT("");
 	PRINT("Capacità chilometrica longitudinale totale");
 	PRINT("c_tot = " +c_tot +" [nF/km]");
-	L0:=[0,0,0,c_tot,f,d];
+	L0:=[0,0,0,c_tot,f,d_tot,n,terne];
 	PRINT("");
 end;
 
