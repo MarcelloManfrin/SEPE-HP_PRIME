@@ -1,0 +1,506 @@
+// Marcello Manfrin 01/04/2022
+
+// Il programma calcola la Matrice di Trasmissione totale
+// di una rete a un numero arbitrario di tratte
+// e tutti i parametri tratta per tratta.
+
+// Nel ciclo, per ogni tratta, vengono calcolati e stampati i parametri della linea;
+// i parametri base, atti esclusivamente al calcolo degli elementi della matrice,
+// vengono sovrascitti ad ogni iterazione.
+
+// La Matrice di Trasmissione Totale parte pari alla matrice identica
+// e viene aggiornata ad ogni tratta come cascata tra
+// il blocco precedente e la tratta successiva.
+// Una questione analoga vale per la capacita longitudinale totale.
+
+// La cascata risultante non viene stampata se la rete è composta da un unica tratta.
+
+// ATTENZIONE: viene conservata la matrice di trasmissione totale compensata
+// nello slot di memoria M0, sovrascrivendo la precedente.
+
+// ATTENZIONE: se la rete ha una sola tratta
+// viene conservato il vettore contenente i parametri noti della rete
+// nello slot di memoria L0, sovrascrivendo il precedente;
+// in caso di piu tratte viene impostato un valore nullo per r,l,g.
+
+EXPORT ReteTotale()
+BEGIN
+
+	LOCAL n,f,Un;				// input
+
+	LOCAL r,l,g,c,d,terne;
+	LOCAL M_tot,c_tot,d_tot;
+
+	LOCAL j;					// contatore cicli
+
+	LOCAL z,y,Z,Y;
+	LOCAL k,k1,Zc,Zc_mod, Zc_arg;
+	LOCAL S_nat,S_nat_mod,S_nat_arg;
+	LOCAL A,B,C,D;
+	LOCAL λ,v; 
+	LOCAL Zpi,Ypi;            	// schema pigreco equivalente
+	LOCAL Zpin,Ypin;            // schema pigreco nominale
+
+	M_tot:=[[1,0],[0,1]];
+	c_tot:=0;
+	d_tot:=0;
+	j:=1;
+
+	INPUT({n,f,Un},"Input ReteTotale",{"n [/]","f [Hz]","Un [Kv]"},
+	{"Numero di tratte","Frequenza di rete","Tensione di rete"});
+	Un:=Un*10^3;				// riporto a kV
+
+	PRINT("");
+	PRINT("==============RETE TOTALE==============");
+	PRINT("");
+
+	for j from 1 to n step 1 do					// un ciclo per tratta
+		
+		if n>1 then								// se tratta multipla allora stampa numero tratta
+			PRINT("-- Tratta " +j +" --");
+			PRINT("");
+		end;
+		
+		if n>1 then				// se tratta multipla allora stampa numero tratta su descrizione input
+			INPUT({r,l,g,c,d,terne},"Input ReteTotale, tratta " +j,{"r [mΩ/km]","l [mH/km]","g [nS/km]","c [nF/km]","d [km]",
+			"terne [/]"},{"Resistenza Longitudinale Chilometrica della tratta","Induttanza Longitudinale Chilometrica della tratta",
+			"Conduttanza Longitudinale Chilometrica della tratta","Capacità Longitudinale Chilometrica della tratta",
+			"Lunghezza della tratta","Numero di terne della tratta"});
+		else
+			INPUT({r,l,g,c,d,terne},"Input ReteTotale",{"r [mΩ/km]","l [mH/km]","g [nS/km]","c [nF/km]","d [km]",
+			"terne [/]"},{"Resistenza Longitudinale Chilometrica","Induttanza Longitudinale Chilometrica",
+			"Conduttanza Longitudinale Chilometrica","Capacità Longitudinale Chilometrica",
+			"Lunghezza della linea","Numero di terne della linea"});
+		end;
+		
+		r:=r/10^3;        // riportato a mΩ/km
+		l:=l/10^3;        // riportato a mH/km  
+		g:=g/10^9;        // riportato a nS/km
+		c:=c/10^9;        // riportato a nF/km
+		
+		L0:=[r,l,g,c,f,d,n,terne];		// costruisco L0
+		
+		z:=(r+i*2*pi*f*l)/terne;
+		y:=(g+i*2*pi*f*c)*terne;
+		PRINT("Impedenza chilometrica [Ω/km]");
+		PRINT("z= r+jX_l = " +z);
+		PRINT("Ammettenza chilometrica [S/km]");
+		PRINT("y= g+jX_c = " +y);
+		PRINT("");
+		
+		Z:=z*d;
+		Y:=y*d;
+		PRINT("Impedenza di linea [Ω]");
+		PRINT("Z = z*d = " +Z);
+		PRINT("Ammettenza di linea [S]");
+		PRINT("Y = y*d = " +Y);
+		PRINT("");
+		
+		Zc:=sqrt(z/y);
+		Zc_mod:=ABS(Zc);
+		Zc_arg:=ARG(Zc);
+		PRINT("Impedenza Caratteristica [Ω]");
+		PRINT("Zc = √z/y =  " +Zc );
+		PRINT("|Zc| = " +Zc_mod );
+		PRINT("arg(Zc) = " +Zc_arg);
+		PRINT("");
+		
+		k:=sqrt(z*y);
+		k1:=r/(2*Zc_mod);
+		PRINT("Costante di Propagazione [1/km]");
+		PRINT("k = √z*y = " +k );
+		PRINT("k' ~= r/(2*|Zc|) = " +k1 );
+		PRINT("");
+		
+		S_nat:=((Un^2)/CONJ(Zc))/10^6;
+		S_nat_mod:=ABS(S_nat);
+		S_nat_arg:=ARG(S_nat);
+		PRINT("Potenza Complessa Naturale");
+		PRINT("S_nat = (Un^2)/conj(Zc) = " +S_nat +" [MW+jMVAR]");
+		PRINT("|S_nat| = " +S_nat_mod +" [MVA]");
+		PRINT("arg(S_nat) = " +S_nat_arg);
+		PRINT("");
+		
+		A:=cosh(k*d);
+		B:=Zc*sinh(k*d);
+		C:=(sinh(k*d))/Zc;
+		M0:=[[A,B],[C,A]];
+		PRINT("Elementi Matrice di Trasmissione");
+		PRINT("A = cosh(k*d) = " +A +" [/]");
+		PRINT("B = sinh(k*d)*Zc = " +B +" [Ω]");
+		PRINT("C = sinh(k*d)/Zc = " +C +" [S]");
+		PRINT("D = cosh(k*d) = " +A +" [/]");
+		PRINT("");
+		
+		PRINT("Se linea ideale: ");
+		λ:=1/(f*sqrt((l-0.05*10^(-3))*c));
+		v:=λ*f;
+		PRINT("λ = 1/f*√l_id*c = " +λ +" [km]");
+		PRINT("v = v*f = " +v +" [km/s]");
+		PRINT("Linea reale: ");
+		λ:=2*pi/IM(k);
+		v:=λ*f;
+		PRINT("λ = 2*pi/IM(k) = " +λ +" [km]");
+		PRINT("v = λ*f = " +v +" [km/s]");
+		PRINT("");
+		
+		Zpi:=B;
+		Ypi:=(A-1)/B;
+		PRINT("Schema pigreco equivalente");
+		PRINT("Z3 = B = " +Zpi +" [Ω]");
+		PRINT("Y1 = Y2 = (A-1)/B = " +Ypi +" [S]");
+		PRINT("");
+
+		Zpin:=Z;
+		Ypin:=Y/2;
+		PRINT("Schema pigreco nominale");
+		PRINT("Z3 = Z = " +Zpin +" [Ω]");
+		PRINT("Y1 = Y2 = Y/2 = " +Ypin +" [S]");
+		PRINT("");
+		
+		
+		M_tot:=M_tot*M0;
+		c_tot:=c_tot+(terne*d*c);
+		d_tot:=d_tot+d;
+
+	end;
+
+	M0:=M_tot;			// salvo la matrice di trasmissione totale nello slot M0
+
+	if n>1 then			// se tratta multipla calcola e stampa matrice totale
+		PRINT("-- ReteTotale Totale --");
+		PRINT("Elementi Matrice di Trasmissione");
+		PRINT("A_tot = " +M0(1,1) +" [/]");
+		PRINT("B_tot = " +M0(1,2) +" [Ω]");
+		PRINT("C_tot = " +M0(2,1) +" [S]");
+		PRINT("D_tot = " +M0(2,2) +" [/]");
+		PRINT("");
+		PRINT("Capacità chilometrica longitudinale totale");
+		PRINT("c_tot = " +c_tot +" [nF/km]");
+		L0:=[0,0,0,c_tot,f,d_tot,n,terne];
+		PRINT("");
+	end;
+
+	PRINT("Valore di M0 e L0 aggiornato!");
+
+END;
+
+
+
+
+
+// Marcello Manfrin 01/04/2022
+
+// Il programma esegue il teorema di Ossanna.
+
+// Il codice è generosamente ispirato ad uno girato tra gruppi telegram da anonimo autore.
+
+// ATTENZIONE: prima di eseguire questo codice deve esser fatto girare
+// almeno una volta il programma "ReteTotale" in quanto viene qui richiamata
+// la matrice di trasmissione della rete che viene conservata
+// nello slot di memoria M0.
+
+EXPORT Ossanna()
+BEGIN
+
+	LOCAL Pa,Qa,Up0;          //input
+
+	LOCAL A,B,D,Sa;
+	LOCAL Iamp,φ,Un;
+	LOCAL S0r,U0ANL,Z;
+	LOCAL Ub,Zb,Sb;
+	LOCAL Sa_pu,Zpu,X;
+	LOCAL ψ,Φ;
+	LOCAL ηoss,ξ;
+	LOCAL Ux,Uy;
+	LOCAL a,b,c,d,f;
+	LOCAL Ua_pu,Ua,DU;
+	LOCAL Sp_pu,Sp_mono,DS;
+	LOCAL α,Up0;
+	LOCAL Ia,Ip;
+	LOCAL ∆S,∆U,∆P,∆Q,∆p,∆q;
+	LOCAL OSS;
+
+	INPUT({Pa,Qa,Up0},"Input Ossanna",{"Pa [MW]","Qa [Mvar]","Up0 [kV]"},
+	{"Potenza attiva trifase allo arrivo","Potenza reattiva trifase allo arrivo","Tensione stellata alla partenza"});
+
+	A:=M0(1,1);
+	B:=M0(1,2);
+	D:=M0(2,2);
+	Sa:=Pa+i*Qa;
+
+	PRINT("");
+	PRINT("===============OSSANNA===============");
+	PRINT("");
+
+	S0r:=Sa/3;		// riporto a monofase equivalente
+	PRINT("S_0r = Sa/3 = " +S0r +" [MW+jMVAR]");
+	U0ANL:=Up0/A;
+	PRINT("U_0ANL = Up0/A = "+U0ANL +" [kV]");
+	Z:=B/A; 
+	PRINT("Z = B/A = " +Z +" [Ω]");
+	PRINT("");
+
+	Ub:=ABS(U0ANL);
+	Zb:=ABS(Z);
+	Sb:=Ub^2/Zb;
+	PRINT("Grandezze Base");
+	PRINT("Ub = |U0ANL| = "+Ub +" [kV]");
+	PRINT("Zb = |Z| = "+Zb +" [Ω]");
+	PRINT("Sb =Ub^2/Zb = "+Sb +" [MVA]");
+	PRINT("");
+
+	Sa_pu:=S0r/Sb;
+	Zpu:=Z/Zb;
+	PRINT("Grandezze in pu [/]");
+	PRINT("Sa_pu = S0r/Sb = "+Sa_pu);
+	PRINT("Zpu = Z/Zb = "+Zpu);
+
+	ψ:=ARG(Zpu);
+	Φ:=ARG(Sa_pu);
+	X:=ψ-Φ;
+	PRINT("X = ψ-Φ = arg(Zpu)-arg(Sa_pu) = "+X +" [rad]");
+
+	ηoss:=(ABS(Sa_pu))*sin(X);
+	PRINT("ηoss = |Sa_pu|*senX = "+ηoss);
+	PRINT("");
+
+	Uy:=ηoss;
+	a:=ABS(Sa_pu);
+	b:=cos(ψ-Φ);
+	c:=sin(ψ-Φ);
+	d:=0.25-a*b-(a*c)^2;
+
+	if d>0 then				// controllo realizzabilità fisica
+		ξ:=sqrt(d);
+		PRINT("ξ reale, linea realizzabile fisicamente");
+	else
+		ξ:=sqrt(ABS(d))*i;
+		PRINT("ξ immaginario, linea non realizzabile fisicamente");
+	end;
+	 
+	PRINT("ξ = √{1/4-|Sa_pu|*cos(ψ-Φ)-[|Sa_pu|*sen(ψ-Φ)]^2} = "+ξ);
+	PRINT("");
+
+
+	Ux:=0.5+ξ;
+	Ua_pu:=Ux-i*Uy;
+	Ua:=Ua_pu*Ub;
+	∆U:=((Up0-ABS(Ua))/ABS(Ua))*100;
+	PRINT("Tensioni [kV]");
+	PRINT("Ux = 1/2+ξ = "+Ux);
+	PRINT("Ua_pu = ux-juy = " +Ua_pu);
+	PRINT("Ua = Ua_pu*Ub = "+Ua);
+	PRINT("∆u = " +∆U +" %");
+	PRINT("");
+
+	α:=arg(A);
+	Sp_pu:=(A*CONJ(D)-CONJ(Ua_pu)*e^(i*2*α))*e^(i*ψ);
+	Sp_mono:=Sp_pu*Sb;
+	∆S:=3*Sp_mono-Sa;
+	∆P:=RE(∆S);
+	∆Q:=IM(∆S);
+	PRINT("Potenze [MW+jMvar]");
+	PRINT("Sp_pu = [A*D°-Ua_pu°*e^(j2α)]*e^jψ = " +Sp_pu);
+	PRINT("Sp_mono = Sa_pu*Sb = "+Sp_mono);
+	PRINT("∆S = 3*Sp_mono-Sa = "+∆S);
+
+	// se non a vuoto calcola perdite
+	if Pa=0
+		then PRINT("Pa=0, ∆p non calcolato ");
+		else ∆p:=(∆P/Pa)*100; PRINT("∆p = " +∆p +" %");
+	end;
+	// se non a vuoto calcola reativa impegnata
+	if Qa=0
+		then PRINT("Qa=0, ∆q non calcolato ");
+		else ∆q:=ABS(∆Q/Qa)*100; PRINT("∆q = " +∆q +" %");
+	end;
+	PRINT("");
+
+	Ia:=CONJ(Sa/(3*Ua));
+	Ip:=CONJ(Sp_mono/Up0);
+	PRINT("Correnti [kA]");
+	PRINT("Ip = (Sp_mono/Up)° = "+Ip);
+	PRINT("|Ip| = "+ABS(Ip));
+	PRINT("Ia = (Sa/3Ua)° = "+Ia);
+	PRINT("|Ia| = "+ABS(Ia));
+	PRINT("");
+
+	PRINT("OK");
+
+END;
+
+
+
+
+
+// Marcello Manfrin 01/04/2022
+
+// Il programma calcola i parametri di una prova di energizzazione della rete.
+
+// ATTENZIONE: prima di eseguire questo codice deve esser fatto girare
+// almeno una volta il programma "ReteTotale" in quanto viene qui richiamata
+// la matrice di trasmissione della rete che viene conservata
+// nello slot di memoria M0.
+
+// ATTENZIONE: il programma non calcola e stampa la corrente a vuoto
+// nel caso in cui L0 è nullo
+// L0 è definito nullo in caso di linea a tratta multipla.
+
+EXPORT Energizzazione()
+BEGIN
+
+	LOCAL Up0,Icc;			// input
+
+	LOCAL A,C;
+	LOCAL Xsub;
+	LOCAL Usub,Usubm;
+	LOCAL I_NL,I_NLie;
+
+	INPUT({Up0,Icc},"Input Energizzazione",{"Up0 [kV]","Icc [kA]"},
+	{"Tensione stellata alla partenza","Corrente di cortocircuito trifase subtransitoria"});
+
+	A:=M0(1,1);
+	C:=M0(2,1);
+
+	PRINT("");
+	PRINT("============ENERGIZZAZIONE============");
+	PRINT("");
+
+	Xsub:=Up0/Icc;
+	PRINT("Reattanza subtransitoria");
+	PRINT("Xsub = Up0/Icc = " +Xsub +" [Ω]");
+	PRINT("");
+
+	Usub:=Up0/(A+(i*Xsub*C));
+	Usubm:=ABS(Usub);
+	PRINT("Tensione subtransitoria");
+	PRINT("Usub = Up0/(A+jX*C) = " +Usub +" [kV]");
+	PRINT("|Usub|= "+Usubm);
+	PRINT("");
+	if Usubm<242.5
+		then PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
+		else PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
+	end;
+	PRINT("");
+
+	I_NL:=Up0/(A/C);
+	PRINT("Corrente a vuoto");
+	PRINT("I_NL = Up0/(A/C) = " +I_NL*10^3 +" [A]");
+	PRINT("|I_NL| = " +ABS(I_NL)*10^3 +" [A]");
+	PRINT("");
+	if ABS(I_NL)<0.4
+		then PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
+		else PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
+	end;
+	PRINT("");
+
+	I_NLie:= 2*pi*L0(5)*L0(4)*L0(6)*(Up0*10^3);
+	if L0(7)=1
+		then 
+			PRINT("Se la linea fosse stata a costanti concentrate:");
+			PRINT("I_NL = 2πf*c*d*Up0 = " +I_NLie +" [A]");
+			PRINT("|I_NL| =  "+ABS(I_NLie) +" [A]");
+		else
+			PRINT("Se la linea fosse stata a costanti concentrate:");
+			PRINT("I_NL = 2πf*SUM(c*d)*Up0");
+			PRINT("Linea a tratta multipla, calcolare manualmente.");
+			PRINT("");
+	end;
+
+	PRINT("OK");
+
+END;
+
+
+
+
+
+// Marcello Manfrin 01/04/2022
+
+// Il programma calcola e stampa i valori della matrice di trasmissione totale,
+// tensione subtransitoria e corrente a vuoto di una linea a cui viene compensata
+// della potenza reattiva a monte e a valle di essa.
+
+// ATTENZIONE: prima di eseguire questo codice deve esser fatto girare
+// almeno una volta il programma "ReteTotale" in quanto viene qui richiamata
+// la matrice di trasmissione della rete che viene conservata
+// nello slot di memoria M0.
+
+// ATTENZIONE: il programma prevede esclusivamente il caso di
+// compensazione uguale in partenza ed in arrivo, senza compensazioni intermedie.
+
+// ATTENZIONE: viene conservata la matrice di trasmissione totale compensata
+// nello slot di memoria M0, sovrascrivendo la precedente.
+
+EXPORT CompDer()
+BEGIN
+
+	LOCAL Qcd,Up0,Icc;			// input
+
+	LOCAL Y,Scd;
+	LOCAL Mcd;
+	LOCAL Xsub,Usub;
+	LOCAL I_NL,I_NLie;
+
+	INPUT({Qcd,Up0,Icc},"Input CompDerivata",{"Qcd [Mvar]","Up0 [kV]","Icc [kA]"},
+	{"Potenza reattiva compensata","Tensione stellata alla partenza","Corrente di cortocircuito trifase subtransitoria"});
+
+
+	PRINT("");
+	PRINT("========COMPENSAZIONE DERIVATA========");
+	PRINT("");
+
+	Scd:=i*Qcd*10^(6);
+	Up0:=Up0*10^3;
+	Icc:=Icc*10^3;
+
+	Y:=CONJ(Scd)/(3*Up0^2);
+	PRINT("Ammettenza derivata");
+	PRINT("Y=Scd°/3*Up0^2 = "+Y +" [S]");
+	PRINT("");
+
+	Mcd:=[[1,0],[Y,1]];
+	PRINT("Matrice di trasmissione della compensazione derivata");
+	PRINT("A_cd = "+Mcd(1,1) +" [/]");
+	PRINT("B_cd = "+Mcd(1,2) +" [Ω]");
+	PRINT("C_cd = "+Mcd(2,1) +" [S]");
+	PRINT("D_cd = "+Mcd(2,2) +" [/]");
+	PRINT("");
+
+	M0:=Mcd*M0*Mcd;
+	PRINT("Matrice di trasmissione totale");
+	PRINT("A_tot = "+M0(1,1) +" [/]");
+	PRINT("B_tot = "+M0(1,2) +" [Ω]");
+	PRINT("C_tot = "+M0(2,1) +" [S]");
+	PRINT("D_tot = "+M0(2,2) +" [/]");
+	PRINT("");
+
+	Xsub:=Up0/Icc;
+	Usub:=Up0/(M0(1,1)+(i*Xsub*M0(2,1)));
+	PRINT("Reattanza subtransitoria");
+	PRINT("Xsub = Up0/Icc = " +Xsub +" [Ω]");
+	PRINT("Tensione subtransitoria");
+	PRINT("Usub = Up0/(A_tot+jXsub*C_tot) = " +Usub/10^3 +" [kV]");
+	PRINT("|Usub|= "+ABS(Usub/10^3) +" [kV]");
+	PRINT("");
+	if ABS(Usub)<242500
+		then PRINT("La tensione subtransitoria non supera il limite di 242.5 kV");
+		else PRINT("La tensione subtransitoria SUPERA il limite di 242.5 kV");
+	end;
+	PRINT("");
+
+	I_NL:=Up0/(M0(1,1)/M0(2,1));
+	PRINT("Corrente a vuoto");
+	PRINT("I_NL = Up0/(A_tot/C_tot) "+I_NL +" [A]");
+	PRINT("|I_NL| =  "+ABS(I_NL) +" [A]");
+	PRINT("");
+	if ABS(I_NL)*10^3<400
+		then PRINT("La corrente capacitiva a vuoto non supera il valore 400 A quindi è interrompibile con un interruttore standard IEC");
+		else PRINT("La corrente capacitiva a vuoto SUPERA il valore 400 A quindi NON è interrompibile con un interruttore standard IEC");
+	end;
+	PRINT("");
+
+	PRINT("Valore di M0 aggiornato!");
+
+END;

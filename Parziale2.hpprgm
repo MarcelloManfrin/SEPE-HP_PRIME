@@ -1,0 +1,201 @@
+// Marcello Manfrin 10/06/2022
+
+EXPORT DisturboFrequenza()
+BEGIN
+	
+	LOCAL Kr,Ku,ΔP;			// input
+
+	LOCAL Δf;
+
+	INPUT({Kr,Ku,ΔP},"Input DisturboFrequenza",{"Kr [MW/Hz]","Ku [MW/Hz]","ΔP [MW]"},
+	{"Energia regolante della rete","Energia regolante dei carichi","Disturbo"});
+
+	PRINT("");
+	PRINT("==========DISTURBO FREQUENZA==========");
+	PRINT("");
+	
+	Δf:=-ΔP/(Kr+Ku);
+	PRINT("Variazione di frequenza");
+	PRINT("Δf = -ΔP/(Kr+Ku) = " +Δf +" [Hz]");
+	PRINT("");
+	
+	PRINT("Controlla la potenza regolante dato statismo σ");
+	PRINT("Pr = σ*fn*Kr");
+	PRINT("");
+	
+	PRINT("OK");
+	
+END;
+
+
+
+
+
+EXPORT ImpedenzaOnda()
+BEGIN
+
+	LOCAL tipo,num,den,rel;			// input
+
+	LOCAL Zo;
+
+	INPUT({tipo},"Input ImpedenzaOnda",{"tipo [/]"},
+	{"0 = OHL, 1 = IPC or GIL"});
+
+	PRINT("");
+	PRINT("===========IMPEDENZA D'ONDA===========");
+	PRINT("");
+
+	rel:=1;
+
+	if tipo==0
+		then
+		INPUT({num,den},"Input ImpedenzaOnda",{"h [m]","Φeq [mm]"},
+			{"Altezza","Diametro equivalente"});
+		num:=4*num;
+		den:=den/10^3;
+		
+		Zo:=138*log(num/den);
+		PRINT("Impedenza d'onda");
+		PRINT("Zo = 138*log(4h/Φeq) = " +Zo +" [Ω]");
+		PRINT("");
+		
+		else
+		INPUT({num,den,rel},"Input ImpedenzaOnda",{"Φ_ext [mm]","Φ_int [mm]","ε_r [/]"},
+			{"Diametro esterno","Diametro interno","Costante dielettrica relativa"});
+			
+		Zo:=(138/sqrt(rel))*log(num/den);
+		PRINT("Impedenza d'onda");
+		PRINT("Zo = (138/√ε_r)*log(Φ_ext/Φ_int) = " +Zo +" [Ω]");
+		PRINT("");
+	end;
+
+	PRINT("OK");
+
+END;
+
+
+
+
+
+EXPORT Fulminazioni()
+BEGIN
+	
+	LOCAL dove,Un,Z,R,k;			// input
+
+	LOCAL Ui,U,I,p;
+	Ui:=0;
+
+	INPUT({dove,Un},"Input Fulminazioni",{"dove [/]","Un [kV]"},
+	{"0 = conduttore, 1 = traliccio, 2 = fune di guardia","Tensione nominale"});
+	
+	case
+		if Un==500 then Ui:=1550 end;
+		if Un==380 then Ui:=1425 end;
+		if Un==220 then Ui:=1050 end;
+		if Un==150 then Ui:=750 end;
+		if Un==132 then Ui:=650 end;
+		[INPUT({Ui},"Input Fulminazioni",{"Ui [kV]"},
+			{"Tensione d'impulso"})];	
+	end;
+
+	PRINT("");
+	PRINT("=============FULMINAZIONI=============");
+	PRINT("");
+	
+	case
+		if dove==0 then
+			INPUT({Z},"Input Fulminazioni",{"Zo [Ω]"},
+				{"Impedenza d'onda conduttore"});
+				
+			I:=Ui/(Z/2);
+			PRINT("Corrente fulminazione");
+			PRINT("If = Ui/(Z/2) = " +I +" [kA]");
+			PRINT("");
+			
+			p:=10^(2-I/60);
+			PRINT("Probabilità");
+			PRINT("p = 10^(2-I/60) = " +p +" %");
+			PRINT("");
+		end;
+		
+		if dove==1 then
+			INPUT({R},"Input Fulminazioni",{"R [Ω]"},
+				{"Resistenza di terra"});
+				
+			I:=Ui/R;
+			PRINT("Corrente fulminazione");
+			PRINT("If = Ui/R = " +I +" [kA]");
+			PRINT("");
+			
+			p:=10^(2-I/60);
+			PRINT("Probabilità");
+			PRINT("p = 10^(2-I/60) = " +p +" %");
+			PRINT("");
+		end;
+		
+		if dove==2 then
+			INPUT({Z,R,k},"Input Fulminazioni",{"Zfg [Ω]","R [Ω]","k [/]"},
+				{"Impedenza d'onda f.g.","Resistenza di terra","Costante di accoppiamenmto"});
+				
+			I:=(Ui/k)*((R+Z/2)/(R*Z/2));
+			PRINT("Corrente fulminazione");
+			PRINT("If = (Ui/k)*((R+Z/2)/(R*Z/2)) = " +I +" [kA]");
+			PRINT("");
+			
+			p:=10^(2-I/60);
+			PRINT("Probabilità");
+			PRINT("p = 10^(2-I/60) = " +p +" %");
+			PRINT("");
+		end;
+		
+	end;
+	
+	PRINT("OK");
+	
+END;
+
+
+
+
+
+EXPORT Graticcio()
+BEGIN
+	
+	LOCAL Z1,Z2;			// input
+
+	LOCAL r1,r2,t1,t2;
+
+	INPUT({Z1,Z2},"Input Graticcio",{"Z1 [Ω]","Z2 [Ω]"},
+	{"Impedenza linea aerea","Impedenza cavo"});
+	
+	PRINT("");
+	PRINT("===========GRATICCIO===========");
+	PRINT("");
+	
+	r1:=(Z2-Z1)/(Z1+Z2);
+	t1:=r1+1;
+	PRINT("Andata: da 1 a 2");
+	PRINT("r1 = (Z2-Z1)/(Z1+Z2) = " +r1 +" pu");
+	PRINT("t1 = r1+1 = " +t1 +" pu");
+	PRINT("");
+	
+	r2:=(Z1-Z2)/(Z1+Z2);
+	t2:=r2+1;
+	PRINT("Ritorno: da 2 a 1");
+	PRINT("r2 = (Z2-Z1)/(Z1+Z2) = " +r2 +" pu");
+	PRINT("t2 = r2+1 = " +t2 +" pu");
+	PRINT("");
+	
+	if Z2/Z1<0.2
+		then
+		PRINT("Il cavo può essere autoprotetto: controlla se");
+		PRINT("d >= 36*a2*Z2/Z1   con   a2 = 0.3/√ε_r");
+		
+		else
+		PRINT("Il cavo NON può essere autoprotetto");
+		
+	end;
+	
+	PRINT("OK");		
+	
+END;
