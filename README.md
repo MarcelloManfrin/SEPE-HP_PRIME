@@ -1,5 +1,5 @@
 # SEPE-HP_PRIME
-Marcello Manfrin 01/04/2022
+Marcello Manfrin, v1.0 10/06/2022
 
 Raccolta di codici per la risoluzione di esercizi di Sistemi Elettrici Per l'Energia per calcolatrice grafica programmabile HP PRIME.
 
